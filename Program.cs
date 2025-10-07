@@ -12,37 +12,48 @@ public class Program
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .Build();
-        
-        ConnectionFactory connFactory = new(configuration["Database:ConnectionString"]!, configuration["Database:DbType"]!);
 
+        ConnectionFactory connFactory =
+            new(configuration["Database:ConnectionString"]!, configuration["Database:DbType"]!);
         TaskRepository _taskRepository = new TaskRepository(connFactory);
+
+        RepositoryMethodCaller repoMethodsCaller = new(_taskRepository);
 
         while (true)
         {
+            Console.WriteLine("Press \"q\" to quit");
+            Console.WriteLine("Press \"l\" to show all tasks");
+            Console.WriteLine("Press \"d\" to delete task");
+            Console.WriteLine("Press \"a\" to add task");
+            Console.WriteLine("Press \"u\" to set task completed");
+            Console.WriteLine("Press \"c\" to show all uncompleted tasks");
+
             string input = Console.ReadLine();
 
-            if (input == "q") break;
-            if (input == "l")
+            switch (input)
             {
-                var list = await _taskRepository.ShowAllTasksAsync();
-                foreach (var elem in list)
-                {
-                    Console.WriteLine(
-                        $"{elem.Id} - {elem.Title} - {elem.Description} - {elem.IsCompleted} - {elem.CreatedAt}");
-                }
+                
+                case "q":
+                    break;
+                case "l":
+                    await repoMethodsCaller.ShowAllTasksAsync();
+                    break;
+                case "c":
+                    await repoMethodsCaller.ShowUncompletedTasksAsync();
+                    break;
+                case "d":
+                    await repoMethodsCaller.DeleteTaskAsync();
+                    break;
+                case "u":
+                    await repoMethodsCaller.CompleteTaskAsync();
+                    break;
+                case "a":
+                    await repoMethodsCaller.AddTaskAsync();
+                    break;
+                default:
+                    Console.WriteLine("Unknown input, please try again");
+                    break;
             }
-            else if (input == "i")
-            {
-                _taskRepository.AddNewTaskAsync(new TaskEntity()
-                {
-                    Title = Console.ReadLine(),
-                    Description = Console.ReadLine(),
-                    CreatedAt = DateTime.Now,
-                    IsCompleted = false,
-                });
-            }
-            else if (input == "d") _taskRepository.DeleteTaskAsync(int.Parse(Console.ReadLine()));
-            else if (input == "c") _taskRepository.CompleteTaskAsync(int.Parse(Console.ReadLine()));
         }
     }
 }

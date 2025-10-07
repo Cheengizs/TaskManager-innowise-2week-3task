@@ -48,4 +48,12 @@ public class TaskRepository : ITaskRepository
 
         await dbConnection.ExecuteAsync(sqlCommandStr, new { Id = id });
     }
+
+    public async Task<List<TaskEntity>> ShowUncompletedTasksAsync()
+    {
+        using var dbConnection = _factory.GetConnection();
+        string sqlCommandStr = "SELECT * FROM Tasks WHERE IsCompleted = 0";
+        
+        return (await dbConnection.QueryAsync<TaskEntity>(sqlCommandStr)).ToList();
+    }
 }
